@@ -1,0 +1,8 @@
+streamlit
+plotly
+pandas
+geopy
+SpeechRecognition
+gTTS
+deep-translator
+twilio

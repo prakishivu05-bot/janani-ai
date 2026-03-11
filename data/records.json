@@ -1,0 +1,34 @@
+[
+  {
+    "mother_id": "M001",
+    "date": "2026-02-10",
+    "visit_type": "ANC Checkup",
+    "hemoglobin": 11.2,
+    "blood_pressure": "110/70",
+    "risk_level": "GREEN"
+  },
+  {
+    "mother_id": "M002",
+    "date": "2026-02-05",
+    "visit_type": "ANC Checkup",
+    "hemoglobin": 9.8,
+    "blood_pressure": "130/85",
+    "risk_level": "YELLOW"
+  },
+  {
+    "mother_id": "M003",
+    "date": "2026-02-03",
+    "visit_type": "Emergency Visit",
+    "hemoglobin": 8.5,
+    "blood_pressure": "150/95",
+    "risk_level": "RED"
+  },
+  {
+    "mother_id": "M001",
+    "date": "2026-03-03",
+    "visit_type": "Follow-up",
+    "hemoglobin": 11.5,
+    "blood_pressure": "112/72",
+    "risk_level": "GREEN"
+  }
+]

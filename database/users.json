@@ -1,0 +1,37 @@
+{
+    "mothers": [
+        {
+            "name": "pp",
+            "age": 18,
+            "phone": "4546454544",
+            "username": "p",
+            "password": "Praki@#05",
+            "location": "Siddaganga Student Hostel, Chord Road, Thimmenahalli, Bengaluru West City Corporation, Bengaluru, Bangalore North, Bengaluru Urban, Karnataka, 560040, India"
+        },
+        {
+            "name": "Asha",
+            "age": 18,
+            "phone": "8867060506",
+            "username": "asha123",
+            "password": "Asha@123",
+            "location": "Siddaganga Student Hostel, Chord Road, Thimmenahalli, Bengaluru West City Corporation, Bengaluru, Bangalore North, Bengaluru Urban, Karnataka, 560040, India"
+        },
+        {
+            "name": "Asha",
+            "age": 18,
+            "phone": "",
+            "username": "",
+            "password": "Praki@123",
+            "location": "Dasarahalli, Thimmenahalli, Bengaluru West City Corporation, Bengaluru, Bangalore North, Bengaluru Urban, Karnataka, 560040, India"
+        }
+    ],
+    "asha_workers": [
+        {
+            "name": "manju",
+            "phone": "8867060506",
+            "username": "asha1234",
+            "password": "Asha@1123",
+            "location": "Siddaganga Student Hostel, Chord Road, Thimmenahalli, Bengaluru West City Corporation, Bengaluru, Bangalore North, Bengaluru Urban, Karnataka, 560040, India"
+        }
+    ]
+}

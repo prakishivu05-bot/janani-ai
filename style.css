@@ -1,0 +1,550 @@
+:root {
+  --bg: #050512;
+  --bg-elevated: #101020;
+  --bg-soft: rgba(255, 255, 255, 0.02);
+  --accent: #ff6fb5;
+  --accent-soft: #ff9ecf;
+  --accent-strong: #ff3b9b;
+  --accent-alt: #6c63ff;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-main: #f9fbff;
+  --text-soft: #c3c7de;
+  --danger: #ff1744;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 14px 32px rgba(0, 0, 0, 0.5);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 111, 181, 0.14), transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(108, 99, 255, 0.2), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(0, 191, 166, 0.18), transparent 55%),
+    linear-gradient(145deg, #050510, #050818 55%, #040412);
+}
+
+.app-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.4rem 1.2rem 1.6rem;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.1rem;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(16, 16, 32, 0.96), rgba(9, 9, 22, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 210deg,
+    #ff6fb5,
+    #ff9ecf,
+    #6c63ff,
+    #00bfa6,
+    #ff6fb5
+  );
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.12),
+    0 10px 22px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #050510;
+}
+
+.brand-title {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.brand-sub {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.lang-label {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.lang-select {
+  background: rgba(11, 11, 30, 0.9);
+  color: var(--text-main);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.lang-select:focus {
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+
+main {
+  margin-top: 1.3rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr 0.95fr;
+  gap: 1.2rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1.2rem;
+}
+
+.card {
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 55%),
+    rgba(9, 10, 30, 0.96);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  padding: 1.1rem 1.2rem 1.2rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, rgba(255, 111, 181, 0.14), transparent 55%);
+  mix-blend-mode: screen;
+}
+
+.hero {
+  padding: 1.3rem 1.4rem 1.45rem;
+}
+
+.hero-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.9rem;
+  line-height: 1.2;
+  margin: 0 0 0.45rem;
+}
+
+.hero-text {
+  margin: 0 0 0.75rem;
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+.hero-list {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.hero-list li + li {
+  margin-top: 0.25rem;
+}
+
+.ai-mentor {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.ai-mentor.vertical {
+  align-items: flex-start;
+}
+
+.ai-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 45% 55% 45% 55%;
+  background: radial-gradient(circle at 30% 20%, #ffe3f2, #ff6fb5 35%, #6c63ff 85%);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.14),
+    0 10px 28px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+.ai-avatar.big {
+  width: 68px;
+  height: 68px;
+}
+
+.ai-avatar::before,
+.ai-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 13%;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.ai-bubble {
+  background: rgba(5, 5, 18, 0.96);
+  border-radius: 18px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.7);
+}
+
+.ai-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-soft);
+  margin-bottom: 0.15rem;
+}
+
+.ai-text {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+.camera-card h2,
+.payment-card h2,
+.full-form-card h2 {
+  margin-top: 0;
+  font-size: 1.12rem;
+}
+
+.camera-wrapper {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: radial-gradient(circle at top, #202040, #050513);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9);
+  aspect-ratio: 4 / 3;
+}
+
+.camera-wrapper.large {
+  aspect-ratio: 3 / 4;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-circle {
+  position: absolute;
+  inset: 8%;
+  margin: auto;
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 0 35px rgba(255, 111, 181, 0.55);
+  pointer-events: none;
+}
+
+.camera-hint {
+  margin: 0.5rem 0 0.7rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.upload-area {
+  margin-top: 0.8rem;
+}
+
+.upload-label {
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 0.3rem;
+}
+
+.upload-area input[type="file"] {
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.upload-preview {
+  margin-top: 0.45rem;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  padding: 0.6rem;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 55%);
+  position: relative;
+}
+
+.upload-placeholder {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.upload-preview img {
+  max-width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  display: none;
+}
+
+.bg-tools {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.bg-tools input[type="color"] {
+  border-radius: 999px;
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+}
+
+.payment-card label,
+.full-form-card label {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.38rem 0.75rem;
+  background: rgba(6, 6, 20, 0.94);
+  color: var(--text-main);
+  font-size: 0.84rem;
+  outline: none;
+}
+
+textarea {
+  border-radius: 16px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-soft);
+  box-shadow: 0 0 0 1px rgba(255, 111, 181, 0.6);
+}
+
+.fine-print {
+  font-size: 0.74rem;
+  color: var(--text-soft);
+  margin-top: 0.45rem;
+}
+
+.btn-primary,
+.btn-subtle {
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 0.48rem 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  transition:
+    transform 150ms ease-out,
+    box-shadow 150ms ease-out,
+    background 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #050510;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.85),
+    0 0 22px rgba(255, 111, 181, 0.7);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.95),
+    0 0 25px rgba(255, 111, 181, 0.8);
+}
+
+.btn-subtle {
+  background: rgba(10, 10, 30, 0.9);
+  color: var(--text-soft);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.btn-subtle:hover {
+  background: rgba(20, 20, 50, 0.95);
+  transform: translateY(-1px);
+}
+
+.payment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.payment-card .btn-primary {
+  margin-top: 0.6rem;
+  width: 100%;
+}
+
+.full-form-card {
+  padding: 1.3rem 1.5rem 1.4rem;
+}
+
+.form-header h2 {
+  margin: 0;
+}
+
+.form-header p {
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem 0.9rem;
+}
+
+.form-span-2 {
+  grid-column: 1 / -1;
+}
+
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.session-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.photo-canvas {
+  flex: 1;
+  min-height: 120px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+
+.coach-steps {
+  margin: 0.9rem 0 0.6rem;
+  padding-left: 1.1rem;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.coach-steps li + li {
+  margin-top: 0.3rem;
+}
+
+.footer {
+  margin-top: 1.3rem;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.step {
+  display: none;
+}
+
+.step-active {
+  display: block;
+}
+
+@media (max-width: 960px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .full-form-card {
+    padding-inline: 1.1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    border-radius: 20px;
+  }
+
+  .app-shell {
+    padding-inline: 0.9rem;
+  }
+}
+

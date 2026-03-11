@@ -1,0 +1,21 @@
+[
+  {
+    "id": "A001",
+    "name": "Sunita Sharma",
+    "phone": "+91-98765-00001",
+    "village": "Rampur Cluster",
+    "assigned_mothers": [
+      "M001",
+      "M002"
+    ]
+  },
+  {
+    "id": "A002",
+    "name": "Rekha Patil",
+    "phone": "+91-98765-00002",
+    "village": "Kheda Cluster",
+    "assigned_mothers": [
+      "M003"
+    ]
+  }
+]
