@@ -4,11 +4,14 @@ import re
 import base64
 import random
 import tempfile
+import smtplib
+from email.mime.text import MIMEText
+from email.utils import formataddr
 
 import streamlit as st
 from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
 from streamlit_geolocation import streamlit_geolocation
-from deep_translator import GoogleTranslator
 from gtts import gTTS
 import speech_recognition as sr
 
@@ -32,6 +35,164 @@ language_codes = {
     "Tamil": "ta",
 }
 
+# -----------------------------
+# EMAIL / ALERT CONFIG
+# -----------------------------
+
+# Set SMTP_ENABLED = True and fill in these values to actually send emails.
+SMTP_ENABLED = False
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "your_email@example.com"
+SMTP_PASSWORD = "your_email_password"
+SMTP_FROM_NAME = "Janani AI Alerts"
+SMTP_FROM_EMAIL = SMTP_USERNAME
+
+# Built-in translations for important UI texts so the interface really
+#switches language even without external APIs.
+UI_TRANSLATIONS = {
+    "Hindi": {
+        "Janani AI • Assistant": "जननी AI • सहायक",
+        "Describe your symptoms": "अपने लक्षण बताइए",
+        "🎙️ Speak symptoms": "🎙️ लक्षण बोलें",
+        "Listening... please speak clearly.": "सुन रहा हूँ... कृपया साफ़‑साफ़ बोलें।",
+        "Captured speech. You can edit the text if needed, then ask Janani AI.": "आवाज़ पकड़ ली गई है। ज़रूरत हो तो ऊपर लिखे वाक्य को बदलकर फिर जननी AI से पूछें।",
+        "I did not hear anything. Please try again or type your symptoms.": "कुछ सुनाई नहीं दिया। दोबारा बोलें या लक्षण टाइप करें।",
+        "Microphone is not available on this device. Please type your symptoms.": "इस डिवाइस पर माइक्रोफ़ोन उपलब्ध नहीं है। कृपया लक्षण टाइप करें।",
+        "Could not understand audio. Please try again.": "आवाज़ समझ नहीं पाई। कृपया फिर से प्रयास करें।",
+        "Ask Janani AI": "जननी AI से पूछें",
+        "Please type or speak your symptoms first.": "पहले अपने लक्षण बोलें या टाइप करें।",
+        "🔊 Read answers aloud": "🔊 उत्तर ज़ोर से सुनाएँ",
+        "🤰 Continue as Mother": "🤰 गर्भवती महिला के रूप में जारी रखें",
+        "👩‍⚕️ Continue as ASHA Worker": "👩‍⚕️ आशा कार्यकर्ता के रूप में जारी रखें",
+        "Mother Login": "माँ लॉगिन",
+        "ASHA Worker Login": "आशा कार्यकर्ता लॉगिन",
+        "Username": "उपयोगकर्ता नाम",
+        "Password": "पासवर्ड",
+        "Login": "लॉगिन",
+        "Invalid login": "गलत लॉगिन विवरण",
+        "Register New Mother": "नई माँ को पंजीकृत करें",
+        "Register New ASHA Worker": "नई आशा कार्यकर्ता को पंजीकृत करें",
+        "Mother Registration": "माँ पंजीकरण",
+        "ASHA Worker Registration": "आशा कार्यकर्ता पंजीकरण",
+        "Name": "नाम",
+        "Age": "आयु",
+        "Phone Number": "मोबाइल नंबर",
+        "Mother registered successfully": "माँ सफलतापूर्वक पंजीकृत हुई",
+        "ASHA Worker registered successfully": "आशा कार्यकर्ता सफलतापूर्वक पंजीकृत हुई",
+        "Mother Dashboard": "माँ डैशबोर्ड",
+        "Use the assistant on the left to report symptoms and get guidance.": "बाएँ तरफ़ के सहायक से लक्षण बताएँ और सलाह प्राप्त करें।",
+        "ASHA Worker Dashboard": "आशा कार्यकर्ता डैशबोर्ड",
+        "Registered Pregnant Women:": "पंजीकृत गर्भवती महिलाएँ:",
+        "⬅ Back": "⬅ वापस",
+    },
+    "Kannada": {
+        "Janani AI • Assistant": "ಜನನಿ AI • ಸಹಾಯಕಿ",
+        "Describe your symptoms": "ನಿಮ್ಮ ಲಕ್ಷಣಗಳನ್ನು ವಿವರಿಸಿ",
+        "🎙️ Speak symptoms": "🎙️ ಲಕ್ಷಣಗಳನ್ನು ಮಾತನಾಡಿ",
+        "Listening... please speak clearly.": "ಕೇಳುತ್ತಿದ್ದೇನೆ... ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾಗಿ ಮಾತನಾಡಿ.",
+        "Captured speech. You can edit the text if needed, then ask Janani AI.": "ನಿಮ್ಮ ಧ್ವನಿ ದಾಖಲಿಸಲಾಗಿದೆ. ಬೇಕಾದರೆ ಮೇಲಿನ ಬರಹವನ್ನು ಬದಲಿಸಿ ನಂತರ ಜನನಿ AI ಗೆ ಕೇಳಿ.",
+        "I did not hear anything. Please try again or type your symptoms.": "ಯಾವುದೂ ಕೇಳಿಸಲಿಲ್ಲ. ಮತ್ತೆ ಮಾತನಾಡಿ ಅಥವಾ ಲಕ್ಷಣಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ.",
+        "Microphone is not available on this device. Please type your symptoms.": "ಈ ಸಾಧನದಲ್ಲಿ ಮೈಕ್ರೋಫೋನ್ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಲಕ್ಷಣಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ.",
+        "Could not understand audio. Please try again.": "ಧ್ವನಿಯನ್ನು ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಲು ಆಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "Ask Janani AI": "ಜನನಿ AI ಯನ್ನು ಕೇಳಿ",
+        "Please type or speak your symptoms first.": "ಮೊದಲು ಲಕ್ಷಣಗಳನ್ನು ಮಾತನಾಡಿ ಅಥವಾ ಟೈಪ್ ಮಾಡಿ.",
+        "🔊 Read answers aloud": "🔊 ಉತ್ತರವನ್ನು ಜೋರಾಗಿ ಓದಿ",
+        "🤰 Continue as Mother": "🤰 ಗರ್ಭಿಣಿಯಾಗಿ ಮುಂದುವರೆಯಿರಿ",
+        "👩‍⚕️ Continue as ASHA Worker": "👩‍⚕️ ಆಶಾ ಕಾರ್ಯಕರ್ತೆಯಾಗಿ ಮುಂದುವರೆಯಿರಿ",
+        "Mother Login": "ತಾಯಿ ಲಾಗಿನ್",
+        "ASHA Worker Login": "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ಲಾಗಿನ್",
+        "Username": "ಬಳಕೆದಾರ ಹೆಸರು",
+        "Password": "ಗುಪ್ತಪದ",
+        "Login": "ಲಾಗಿನ್",
+        "Invalid login": "ತಪ್ಪು ಲಾಗಿನ್ ವಿವರಗಳು",
+        "Register New Mother": "ಹೊಸ ತಾಯಿಯನ್ನು ನೋಂದಣಿ ಮಾಡಿ",
+        "Register New ASHA Worker": "ಹೊಸ ಆಶಾ ಕಾರ್ಯಕರ್ತೆಯನ್ನು ನೋಂದಣಿ ಮಾಡಿ",
+        "Mother Registration": "ತಾಯಿ ನೋಂದಣಿ",
+        "ASHA Worker Registration": "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ನೋಂದಣಿ",
+        "Name": "ಹೆಸರು",
+        "Age": "ವಯಸ್ಸು",
+        "Phone Number": "ಫೋನ್ ಸಂಖ್ಯೆ",
+        "Mother registered successfully": "ತಾಯಿ ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಾಯಿಸಲ್ಪಟ್ಟರು",
+        "ASHA Worker registered successfully": "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಾಯಿಸಲ್ಪಟ್ಟರು",
+        "Mother Dashboard": "ತಾಯಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        "Use the assistant on the left to report symptoms and get guidance.": "ಲಕ್ಷಣಗಳನ್ನು ಹೇಳಲು ಮತ್ತು ಮಾರ್ಗದರ್ಶನಕ್ಕಾಗಿ ಎಡಬದಿಯ ಸಹಾಯಕಿಯನ್ನು ಬಳಸಿ.",
+        "ASHA Worker Dashboard": "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        "Registered Pregnant Women:": "ನೋಂದಾಯಿತ ಗರ್ಭಿಣಿಯರು:",
+        "⬅ Back": "⬅ ಹಿಂತಿರುಗಿ",
+    },
+    "Telugu": {
+        "Janani AI • Assistant": "జనని AI • సహాయకురాలు",
+        "Describe your symptoms": "మీ లక్షణాలను వివరించండి",
+        "🎙️ Speak symptoms": "🎙️ లక్షణాలను మాట్లాడండి",
+        "Listening... please speak clearly.": "వింటున్నాను... దయచేసి స్పష్టంగా మాట్లాడండి.",
+        "Captured speech. You can edit the text if needed, then ask Janani AI.": "మీ మాటలు నమోదయ్యాయి. కావాలంటే పై వాక్యాన్ని మార్చి జనని AI ని అడగండి.",
+        "I did not hear anything. Please try again or type your symptoms.": "ఏమీ వినిపించలేదు. దయచేసి మళ్ళీ మాట్లాడండి లేదా లక్షణాలను టైప్ చేయండి.",
+        "Microphone is not available on this device. Please type your symptoms.": "ఈ పరికరంలో మైక్రోఫోన్ లేదు. దయచేసి లక్షణాలను టైప్ చేయండి.",
+        "Could not understand audio. Please try again.": "మీ స్వరాన్ని అర్థం చేసుకోలేకపోయాను. మళ్లీ ప్రయత్నించండి.",
+        "Ask Janani AI": "జనని AIని అడగండి",
+        "Please type or speak your symptoms first.": "మొదట మీ లక్షణాలను చెప్పండి లేదా టైప్ చేయండి.",
+        "🔊 Read answers aloud": "🔊 సమాధానాన్ని గట్టిగా చదవండి",
+        "🤰 Continue as Mother": "🤰 గర్భిణిగా కొనసాగండి",
+        "👩‍⚕️ Continue as ASHA Worker": "👩‍⚕️ ఆశా వర్కర్‌గా కొనసాగండి",
+        "Mother Login": "తల్లి లాగిన్",
+        "ASHA Worker Login": "ఆశా వర్కర్ లాగిన్",
+        "Username": "యూజర్ పేరు",
+        "Password": "పాస్‌వర్డ్",
+        "Login": "లాగిన్",
+        "Invalid login": "తప్పు లాగిన్ వివరాలు",
+        "Register New Mother": "కొత్త తల్లిని నమోదు చేయండి",
+        "Register New ASHA Worker": "కొత్త ఆశా వర్కర్ ను నమోదు చేయండి",
+        "Mother Registration": "తల్లి నమోదు",
+        "ASHA Worker Registration": "ఆశా వర్కర్ నమోదు",
+        "Name": "పేరు",
+        "Age": "వయస్సు",
+        "Phone Number": "ఫోన్ నంబర్",
+        "Mother registered successfully": "తల్లి విజయవంతంగా నమోదైంది",
+        "ASHA Worker registered successfully": "ఆశా వర్కర్ విజయవంతంగా నమోదైంది",
+        "Mother Dashboard": "తల్లి డ్యాష్‌బోర్డ్",
+        "Use the assistant on the left to report symptoms and get guidance.": "లక్షణాలు చెప్పడానికి మరియు సలహా కోసం ఎడమవైపు ఉన్న సహాయకురాలిని వాడండి.",
+        "ASHA Worker Dashboard": "ఆశా వర్కర్ డ్యాష్‌బోర్డ్",
+        "Registered Pregnant Women:": "నమోదైన గర్భిణులు:",
+        "⬅ Back": "⬅ వెనక్కు",
+    },
+    "Tamil": {
+        "Janani AI • Assistant": "ஜனனி AI • உதவியாளர்",
+        "Describe your symptoms": "உங்கள் அறிகுறிகளை எழுதுங்கள்",
+        "🎙️ Speak symptoms": "🎙️ அறிகுறிகளை பேசுங்கள்",
+        "Listening... please speak clearly.": "கேட்டு கொண்டிருக்கிறேன்... தயவுசெய்து தெளிவாக பேசுங்கள்.",
+        "Captured speech. You can edit the text if needed, then ask Janani AI.": "உங்கள் குரல் பதிவாகியுள்ளது. மேலே உள்ள எழுத்தை மாற்றி பின்னர் ஜனனி AIஇடம் கேளுங்கள்.",
+        "I did not hear anything. Please try again or type your symptoms.": "எதுவும் கேட்கவில்லை. மறுபடியும் பேசுங்கள் அல்லது அறிகுறிகளை type செய்யுங்கள்.",
+        "Microphone is not available on this device. Please type your symptoms.": "இந்த சாதனத்தில் மைக்ரோஃபோன் இல்லை. தயவுசெய்து அறிகுறிகளை type செய்யுங்கள்.",
+        "Could not understand audio. Please try again.": "குரலை புரிந்து கொள்ள முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.",
+        "Ask Janani AI": "ஜனனி AIயிடம் கேளுங்கள்",
+        "Please type or speak your symptoms first.": "முதலில் உங்கள் அறிகுறிகளைச் சொல்லுங்கள் அல்லது type செய்யுங்கள்.",
+        "🔊 Read answers aloud": "🔊 பதிலைக் குரலில் வாசிக்கவும்",
+        "🤰 Continue as Mother": "🤰 கர்ப்பிணியாகத் தொடரவும்",
+        "👩‍⚕️ Continue as ASHA Worker": "👩‍⚕️ ஆஷா பணியாளராகத் தொடரவும்",
+        "Mother Login": "அம்மா உள்நுழைவு",
+        "ASHA Worker Login": "ஆஷா பணியாளர் உள்நுழைவு",
+        "Username": "பயனர் பெயர்",
+        "Password": "கடவுச்சொல்",
+        "Login": "உள்நுழைவு",
+        "Invalid login": "தவறான உள்நுழைவு விவரங்கள்",
+        "Register New Mother": "புதிய அம்மாவை பதிவு செய்யவும்",
+        "Register New ASHA Worker": "புதிய ஆஷா பணியாளரை பதிவு செய்யவும்",
+        "Mother Registration": "அம்மா பதிவு",
+        "ASHA Worker Registration": "ஆஷா பணியாளர் பதிவு",
+        "Name": "பெயர்",
+        "Age": "வயது",
+        "Phone Number": "தொலைபேசி எண்",
+        "Mother registered successfully": "அம்மா வெற்றிகரமாக பதிவு செய்யப்பட்டார்",
+        "ASHA Worker registered successfully": "ஆஷா பணியாளர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்",
+        "Mother Dashboard": "அம்மா டாஷ்போர்டு",
+        "Use the assistant on the left to report symptoms and get guidance.": "இடது பக்கத்தில் உள்ள உதவியாளரைப் பயன்படுத்தி அறிகுறிகளைச் சொல்லி ஆலோசனை பெறுங்கள்.",
+        "ASHA Worker Dashboard": "ஆஷா பணியாளர் டாஷ்போர்டு",
+        "Registered Pregnant Women:": "பதிவு செய்யப்பட்ட கர்ப்பிணிகள்:",
+        "⬅ Back": "⬅ பின்செல்",
+    },
+}
+
 if "language" not in st.session_state:
     st.session_state.language = "English"
 
@@ -52,30 +213,22 @@ language = st.session_state.language
 
 
 def translate_to_english(text: str) -> str:
-    if language == "English" or not text:
-        return text
-    try:
-        return GoogleTranslator(
-            source=language_codes[language], target="en"
-        ).translate(text)
-    except Exception:
-        return text
+    # If you later want to call an English-only AI backend for all inputs,
+    # plug a translator here. For now we assume users may speak any language
+    # and the backend can still handle short messages reasonably.
+    return text
+
+
+def translate_from_english(text: str) -> str:
+    # Placeholder for future external translation; currently we keep the text.
+    return text
 
 
 def t(text: str) -> str:
     """Translate a short UI string from English into the selected language."""
-    return translate_from_english(text) if language != "English" else text
-
-
-def translate_from_english(text: str) -> str:
-    if language == "English" or not text:
+    if language == "English":
         return text
-    try:
-        return GoogleTranslator(
-            source="en", target=language_codes[language]
-        ).translate(text)
-    except Exception:
-        return text
+    return UI_TRANSLATIONS.get(language, {}).get(text, text)
 
 
 # -----------------------------
@@ -219,6 +372,62 @@ def get_exact_location():
     return None, None, None
 
 
+def send_asha_email(to_email: str, subject: str, body: str):
+    """Send an email to the given ASHA email address if SMTP is enabled."""
+    if not SMTP_ENABLED or not to_email:
+        return
+    try:
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((SMTP_FROM_NAME, SMTP_FROM_EMAIL))
+        msg["To"] = to_email
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, [to_email], msg.as_string())
+    except Exception:
+        # Fail silently in demo mode so UI is not broken
+        pass
+
+
+def find_nearby_asha(user_lat, user_lon, asha_list, max_km: float = 5.0):
+    """
+    Return ASHA workers within `max_km` kilometers of the given user
+    latitude/longitude. Each returned item includes a `distance_km` field.
+    """
+    if user_lat is None or user_lon is None:
+        return []
+
+    user_point = (user_lat, user_lon)
+    nearby = []
+
+    for a in asha_list:
+        # Safely read stored coordinates; skip if missing or invalid
+        try:
+            lat = float(a.get("lat")) if a.get("lat") is not None else None
+            lon = float(a.get("lon")) if a.get("lon") is not None else None
+        except (TypeError, ValueError):
+            lat, lon = None, None
+
+        if lat is None or lon is None:
+            continue
+
+        asha_point = (lat, lon)
+        try:
+            km = geodesic(user_point, asha_point).km
+        except Exception:
+            continue
+
+        if km <= max_km:
+            enriched = dict(a)
+            enriched["distance_km"] = km
+            nearby.append(enriched)
+
+    nearby.sort(key=lambda x: x.get("distance_km", max_km + 1))
+    return nearby
+
+
 # -----------------------------
 # CHATBOT STATE
 # -----------------------------
@@ -227,6 +436,10 @@ if "chat_history" not in st.session_state:
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
+
+if "read_aloud" not in st.session_state:
+    # default ON so answers come in voice + text
+    st.session_state.read_aloud = True
 
 
 def risk_pill(risk: str) -> str:
@@ -240,6 +453,8 @@ def risk_pill(risk: str) -> str:
 
 
 def speak_text(text: str):
+    if not st.session_state.get("read_aloud"):
+        return
     lang_code = language_codes.get(language, "en")
     try:
         tts = gTTS(text=text, lang=lang_code)
@@ -255,6 +470,10 @@ def render_chatbot():
     st.markdown(
         f'<div class="chat-card"><div class="chat-title">{t("Janani AI • Assistant")}</div>',
         unsafe_allow_html=True,
+    )
+
+    st.session_state.read_aloud = st.checkbox(
+        t("🔊 Read answers aloud"), value=st.session_state.read_aloud
     )
 
     for msg in st.session_state.chat_history[-8:]:
@@ -277,17 +496,25 @@ def render_chatbot():
     c1, c2 = st.columns(2)
     with c1:
         if st.button(t("🎙️ Speak symptoms")):
-            r = sr.Recognizer()
-            with sr.Microphone() as source:
-                st.info(t("Listening... please speak clearly."))
-                audio = r.listen(source, timeout=5, phrase_time_limit=10)
             try:
+                r = sr.Recognizer()
+                with sr.Microphone() as source:
+                    st.info(t("Listening... please speak clearly."))
+                    r.adjust_for_ambient_noise(source, duration=0.5)
+                    audio = r.listen(source, timeout=3, phrase_time_limit=6)
                 detected = r.recognize_google(
                     audio, language=language_codes.get(language, "en")
                 )
                 st.session_state.symptom_input = detected
-                st.success(t("Captured speech."))
-                st.rerun()
+                st.success(t("Captured speech. You can edit the text if needed, then ask Janani AI."))
+            except sr.WaitTimeoutError:
+                st.warning(
+                    t("I did not hear anything. Please try again or type your symptoms.")
+                )
+            except OSError:
+                st.error(
+                    t("Microphone is not available on this device. Please type your symptoms.")
+                )
             except Exception:
                 st.error(t("Could not understand audio. Please try again."))
     with c2:
@@ -310,6 +537,42 @@ def render_chatbot():
                         "risk": risk,
                     }
                 )
+
+                # If risk is moderate or high, email nearby ASHA workers (when configured)
+                if risk in ("YELLOW", "RED"):
+                    current_mother = st.session_state.get("current_mother")
+                    if current_mother:
+                        data = load_data()
+                        addr, user_lat, user_lon = get_exact_location()
+                        nearby_asha = find_nearby_asha(
+                            user_lat, user_lon, data.get("asha_workers", [])
+                        )
+                        for a in nearby_asha:
+                            to_email = a.get("email")
+                            if not to_email:
+                                continue
+                            subject = f"Janani AI alert for {current_mother.get('name','Mother')} ({risk} risk)"
+                            body = f"""Janani AI has detected a {risk} risk report.
+
+Mother details:
+- Name: {current_mother.get('name','Not Available')}
+- Age: {current_mother.get('age','Not Available')}
+- Phone: {current_mother.get('phone','Not Available')}
+- Address (registered): {current_mother.get('location','Not Available')}
+
+Current location (approx):
+- {addr or 'Not available'}
+
+Reported symptoms:
+- {text}
+
+AI Response:
+{response_local}
+
+You are receiving this because you are registered as a nearby ASHA worker in Janani AI.
+"""
+                            send_asha_email(to_email, subject, body)
+
                 speak_text(response_local)
                 st.rerun()
 
@@ -353,6 +616,7 @@ with main_col:
             data = load_data()
             for user in data["mothers"]:
                 if user["username"] == username and user["password"] == password:
+                    st.session_state.current_mother = user
                     st.session_state.page = "mother_dashboard"
                     st.rerun()
             st.error(t("Invalid login"))
@@ -403,17 +667,17 @@ with main_col:
                 st.error("Weak password")
             else:
                 data = load_data()
-                data["mothers"].append(
-                    {
-                        "name": name,
-                        "age": age,
-                        "phone": phone,
-                        "username": username,
-                        "password": password,
-                        "location": address,
-                    }
-                )
+                mother_obj = {
+                    "name": name,
+                    "age": age,
+                    "phone": phone,
+                    "username": username,
+                    "password": password,
+                    "location": address,
+                }
+                data["mothers"].append(mother_obj)
                 save_data(data)
+                st.session_state.current_mother = mother_obj
             st.success(t("Mother registered successfully"))
 
     elif st.session_state.page == "asha_register":
@@ -427,6 +691,7 @@ with main_col:
             st.write("+91")
         with col2:
             phone = st.text_input(t("Phone Number"), max_chars=10)
+        asha_email = st.text_input("Email")
         username = st.text_input(t("Username"))
         password = st.text_input(t("Password"), type="password")
         address, lat, lon = get_exact_location()
@@ -444,9 +709,12 @@ with main_col:
                     {
                         "name": name,
                         "phone": phone,
+                        "email": asha_email,
                         "username": username,
                         "password": password,
                         "location": address,
+                        "lat": lat,
+                        "lon": lon,
                     }
                 )
                 save_data(data)
@@ -458,6 +726,33 @@ with main_col:
             st.rerun()
         st.subheader(t("Mother Dashboard"))
         st.write(t("Use the assistant on the left to report symptoms and get guidance."))
+
+        st.subheader("Nearby ASHA Workers")
+        data = load_data()
+        address, lat, lon = get_exact_location()
+
+        if lat is None or lon is None:
+            st.info("Unable to detect your exact location. Please allow location access.")
+        else:
+            nearby_asha = find_nearby_asha(lat, lon, data.get("asha_workers", []))
+            if not nearby_asha:
+                st.info("No nearby ASHA workers found within 5 km.")
+            else:
+                for a in nearby_asha:
+                    name = a.get("name", "Not Available")
+                    phone = a.get("phone", "Not Available")
+                    location = a.get("location", "Not Available")
+                    km = a.get("distance_km", 0.0)
+
+                    st.write(f"""
+👩‍⚕️ Name: {name}
+
+📞 Phone: {phone}
+
+📍 Address: {location}
+
+📏 Distance: {km:.1f} km
+""")
 
     elif st.session_state.page == "asha_dashboard":
         if st.button(t("⬅ Back"), key="asha_dash_back"):
