@@ -23,6 +23,14 @@
             "username": "",
             "password": "Praki@123",
             "location": "Dasarahalli, Thimmenahalli, Bengaluru West City Corporation, Bengaluru, Bangalore North, Bengaluru Urban, Karnataka, 560040, India"
+        },
+        {
+            "name": "aa",
+            "age": 18,
+            "phone": "8958686896",
+            "username": "ss",
+            "password": "Asha@#123",
+            "location": "Bangalore Institute of Technology, Krishna Rajendra Road, VV Puram, V.V Puram, Bengaluru Central City Corporation, Bengaluru, Bangalore North, Bengaluru Urban, Karnataka, 560004, India"
         }
     ],
     "asha_workers": [
